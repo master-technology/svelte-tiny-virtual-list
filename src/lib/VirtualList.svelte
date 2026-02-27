@@ -326,13 +326,14 @@
 		return styleCache[index];
 	}
 </script>
-
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
 	bind:this={wrapper}
 	bind:offsetHeight={wrapperHeight}
 	bind:offsetWidth={wrapperWidth}
 	class="virtual-list-wrapper"
 	style={wrapperStyle}
+	tabindex="0"
 >
 	{#if headerSnippet}
 		{@render headerSnippet()}

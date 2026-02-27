@@ -92,7 +92,7 @@ jobs:
           fi
 
       - name: Create a tarball for the GitHub release
-        run: pnpm pack
+        run: npm pack
 
       - name: Draft release on GitHub
         uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
