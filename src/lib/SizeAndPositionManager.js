@@ -88,7 +88,15 @@ export default class SizeAndPositionManager {
 		this.itemCount = itemCount;
 		this.estimatedItemSize = estimatedItemSize;
 
+		this.lastMeasuredIndex = -1;
+		this.itemSizeAndPositionData = {};
+
 		this.checkForMismatchItemSizeAndItemCount();
+
+		// Ensure lastMeasuredIndex in range after itemCount change
+		if (this.lastMeasuredIndex >= itemCount) {
+			this.lastMeasuredIndex = itemCount - 1;
+		}
 
 		if (this.justInTime && this.totalSize != null) {
 			this.totalSize = undefined;

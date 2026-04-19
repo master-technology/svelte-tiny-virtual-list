@@ -50,6 +50,7 @@
 	let estimatedItemSize = $derived(
 		optEstimatedItemSize || (typeof itemSize === 'number' && itemSize) || 50
 	);
+	/* svelte-ignore state_referenced_locally */
 	const sizeAndPositionManager = new SizeAndPositionManager(itemSize, itemCount, estimatedItemSize);
 
 	/** @type {HTMLDivElement} */
@@ -58,16 +59,20 @@
 	let wrapperWidth = $state(400);
 	/** @type {{ index: number, style: string }[]} */
 	let items = $state.raw([]);
+	// let validItems = $derived(items.filter((item) => item.index < itemCount));
 
 	/** @type {{ offset: number, changeReason: number }} */
+	/* svelte-ignore state_referenced_locally */
 	let scroll = $state.raw({
 		offset: scrollOffset || (scrollToIndex !== undefined && getOffsetForIndex(scrollToIndex)) || 0,
 		changeReason: SCROLL_CHANGE_REASON.REQUESTED
 	});
+	/* svelte-ignore state_referenced_locally */
 	let prevScroll = $state.snapshot(scroll);
 
 	let heightNumber = $derived(Number.isFinite(height) ? Number(height) : wrapperHeight);
 	let widthNumber = $derived(Number.isFinite(width) ? Number(width) : wrapperWidth);
+	/* svelte-ignore state_referenced_locally */
 	let prevProps = {
 		scrollToIndex: $state.snapshot(scrollToIndex),
 		scrollToAlignment: $state.snapshot(scrollToAlignment),
@@ -144,6 +149,12 @@
 		if (itemPropsHaveChanged) {
 			sizeAndPositionManager.updateConfig(itemSize, itemCount, estimatedItemSize);
 
+			// Clear items when itemCount decreases
+			// Prevents stale indices rendering before refresh()
+			if (itemCount < prevProps.itemCount) {
+				items = [];
+			}
+
 			forceRecomputeSizes = true;
 		}
 
@@ -206,16 +217,20 @@
 	 * Recomputes the sizes of the items and updates the visible items.
 	 */
 	function refresh() {
+		const containerSize = scrollDirection === DIRECTION.VERTICAL ? heightNumber : widthNumber;
+		const totalSize = sizeAndPositionManager.getTotalSize();
+		const maxOffset = Math.max(0, totalSize - containerSize);
+		const clampedOffset = Math.min(scroll.offset, maxOffset);
+
 		const { start, end } = sizeAndPositionManager.getVisibleRange(
-			scrollDirection === DIRECTION.VERTICAL ? heightNumber : widthNumber,
-			scroll.offset,
+			containerSize,
+			clampedOffset,
 			overscanCount
 		);
 
 		/** @type {{ index: number, style: string }[]} */
 		const visibleItems = [];
 
-		const totalSize = sizeAndPositionManager.getTotalSize();
 		const heightUnit = typeof height === 'number' ? 'px' : '';
 		const widthUnit = typeof width === 'number' ? 'px' : '';
 
